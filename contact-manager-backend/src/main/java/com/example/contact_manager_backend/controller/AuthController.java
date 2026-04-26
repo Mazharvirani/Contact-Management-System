@@ -15,7 +15,6 @@ public class AuthController {
     private final UserService userService;
     private final JwtUtil jwtUtil;
 
-    // Constructor Injection (BEST PRACTICE)
     public AuthController(UserService userService, JwtUtil jwtUtil) {
         this.userService = userService;
         this.jwtUtil = jwtUtil;

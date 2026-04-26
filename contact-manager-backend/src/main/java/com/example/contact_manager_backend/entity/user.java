@@ -22,7 +22,6 @@ public class user {
 
     private String role = "USER";
 
-    // 🔽 GETTERS & SETTERS
 
     public Long getId() {
         return id;
