@@ -15,9 +15,9 @@ public class Contact{
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String FirstName;
-    private String LastName;
-    private String Title;
+    private String firstName;
+    private String lastName;
+    private String title;
 
     @OneToMany(mappedBy = "contact",cascade= CascadeType.ALL, orphanRemoval = true)
     private List<PhoneEntry> phones;
