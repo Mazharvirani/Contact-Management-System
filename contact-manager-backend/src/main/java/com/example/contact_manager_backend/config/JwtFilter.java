@@ -5,7 +5,8 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
@@ -18,8 +19,13 @@ import java.util.Collections;
 @Component
 public class JwtFilter extends OncePerRequestFilter {
 
-    @Autowired
-    private JwtUtil jwtUtil;
+    private static final Logger log = LoggerFactory.getLogger(JwtFilter.class);
+
+    private final JwtUtil jwtUtil;
+
+    public JwtFilter(JwtUtil jwtUtil) {
+        this.jwtUtil = jwtUtil;
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -35,7 +41,6 @@ public class JwtFilter extends OncePerRequestFilter {
         }
 
         String authHeader = request.getHeader("Authorization");
-
         String token = null;
         String email = null;
 
@@ -44,27 +49,24 @@ public class JwtFilter extends OncePerRequestFilter {
                 token = authHeader.substring(7);
                 email = jwtUtil.extractEmail(token);
                 if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(
                                     email,
                                     null,
                                     Collections.singletonList(() -> "ROLE_USER")
                             );
-
                     SecurityContextHolder.getContext().setAuthentication(authToken);
                 }
             }
-
         } catch (Exception e) {
-            System.out.println("❌ JWT Error: " + e.getMessage());
+            log.error("JWT Error: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);
 
-        System.out.println("Path: " + path);
-        System.out.println("Auth Header: " + authHeader);
-        System.out.println("Token: " + token);
-        System.out.println("Email: " + email);
+        log.debug("Path: {}", path);
+        log.debug("Auth Header: {}", authHeader);
+        log.debug("Token: {}", token);
+        log.debug("Email: {}", email);
     }
 }

@@ -3,6 +3,7 @@ package com.example.contact_manager_backend.service;
 import com.example.contact_manager_backend.dto.LoginRequest;
 import com.example.contact_manager_backend.dto.RegisterRequest;
 import com.example.contact_manager_backend.dto.ChangePasswordRequest;
+import com.example.contact_manager_backend.dto.UserProfileResponse;
 import com.example.contact_manager_backend.entity.user;
 import com.example.contact_manager_backend.exception.DuplicateResourceException;
 import com.example.contact_manager_backend.exception.ResourceNotFoundException;
@@ -106,5 +107,18 @@ public class UserService {
             user = userRepository.findByPhone(identifier);
         }
         return user.map(u -> u.getEmail()).orElse(null);
+    }
+    public UserProfileResponse getprofile(String email){
+        log.info("fetching profile for: {} ",email);
+        user u = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+
+        UserProfileResponse response = new UserProfileResponse();
+        response.id = u.getId();
+        response.name = u.getName();
+        response.email = u.getEmail();
+        response.phone = u.getPhone();
+        response.role = u.getRole();
+
+        return response;
     }
 }

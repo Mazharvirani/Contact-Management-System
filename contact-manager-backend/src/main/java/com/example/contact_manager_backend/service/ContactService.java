@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 public class ContactService {
 
     private static final Logger log = LoggerFactory.getLogger(ContactService.class);
+    private static final String CONTACT_NOT_FOUND = "Contact not found with id: ";
 
     @Autowired
     private ContactRepository contactRepository;
@@ -82,7 +83,7 @@ public class ContactService {
         log.info("Fetching contact id: {} for user: {}", id, email);
         Contact contact = contactRepository.findById(id)
                 .filter(c -> c.getOwner().getEmail().equals(email))
-                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(CONTACT_NOT_FOUND + id));
         return toResponse(contact);
     }
 
@@ -90,7 +91,7 @@ public class ContactService {
         log.info("Updating contact id: {} for user: {}", id, email);
         Contact contact = contactRepository.findById(id)
                 .filter(c -> c.getOwner().getEmail().equals(email))
-                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(CONTACT_NOT_FOUND + id));
 
         contact.setFirstName(request.firstName);
         contact.setLastName(request.lastName);
@@ -123,7 +124,7 @@ public class ContactService {
         log.info("Deleting contact id: {} for user: {}", id, email);
         Contact contact = contactRepository.findById(id)
                 .filter(c -> c.getOwner().getEmail().equals(email))
-                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(CONTACT_NOT_FOUND + id));
         contactRepository.delete(contact);
         log.info("Contact deleted with id: {}", id);
     }
