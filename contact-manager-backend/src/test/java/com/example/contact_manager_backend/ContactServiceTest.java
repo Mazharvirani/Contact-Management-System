@@ -3,8 +3,6 @@ package com.example.contact_manager_backend;
 import com.example.contact_manager_backend.dto.ContactRequest;
 import com.example.contact_manager_backend.dto.ContactResponse;
 import com.example.contact_manager_backend.entity.Contact;
-import com.example.contact_manager_backend.entity.EmailEntry;
-import com.example.contact_manager_backend.entity.PhoneEntry;
 import com.example.contact_manager_backend.entity.user;
 import com.example.contact_manager_backend.exception.ResourceNotFoundException;
 import com.example.contact_manager_backend.repository.ContactRepository;
@@ -29,7 +27,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class ContactServiceTest {
+ class ContactServiceTest {
 
     @Mock
     private ContactRepository contactRepository;
@@ -66,7 +64,7 @@ public class ContactServiceTest {
         testRequest.emails = new ArrayList<>();
         testRequest.phones = new ArrayList<>();
     }
-    
+
     @Test
     void testCreateContactSuccess() {
         when(userRepository.findByEmail("mazhar@gmail.com")).thenReturn(Optional.of(testUser));

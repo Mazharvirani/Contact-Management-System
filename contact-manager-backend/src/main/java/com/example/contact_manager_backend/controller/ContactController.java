@@ -3,7 +3,6 @@ package com.example.contact_manager_backend.controller;
 import com.example.contact_manager_backend.dto.ContactRequest;
 import com.example.contact_manager_backend.dto.ContactResponse;
 import com.example.contact_manager_backend.service.ContactService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -17,21 +16,21 @@ public class ContactController {
 
     private static final Logger log = LoggerFactory.getLogger(ContactController.class);
 
-    @Autowired
-    private ContactService contactService;
+    private final ContactService contactService;
 
+    public ContactController(ContactService contactService) {
+        this.contactService = contactService;
+    }
 
     @PostMapping
     public ResponseEntity<ContactResponse> createContact(
             Authentication auth,
-    @RequestBody ContactRequest request){
+            @RequestBody ContactRequest request) {
         log.info("Creating contact for user: {}", auth.getName());
-        ContactResponse response = contactService.createContact(auth.getName(),request);
+        ContactResponse response = contactService.createContact(auth.getName(), request);
         log.info("Contact created with id: {}", response.id);
         return ResponseEntity.ok(response);
     }
-
-
 
     @GetMapping
     public ResponseEntity<Page<ContactResponse>> getContacts(
@@ -41,7 +40,6 @@ public class ContactController {
         log.info("Fetching contacts for user: {}", auth.getName());
         return ResponseEntity.ok(contactService.getContacts(auth.getName(), page, size));
     }
-
 
     @GetMapping("/search")
     public ResponseEntity<Page<ContactResponse>> searchContacts(

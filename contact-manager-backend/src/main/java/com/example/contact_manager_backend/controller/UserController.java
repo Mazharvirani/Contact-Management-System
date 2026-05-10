@@ -23,7 +23,7 @@ public class UserController {
 
     @PostMapping("/change-password")
     public ResponseEntity<String> changePassword(@RequestBody ChangePasswordRequest request) {
-        log.info("Change password request for: {}", request.identifier);
+        log.info("Change password request for: {}", request.getIdentifier());
         userService.changePassword(request);
         return ResponseEntity.ok("Password changed successfully");
     }

@@ -24,7 +24,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-public class UserServiceTest {
+class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
@@ -124,13 +124,13 @@ public class UserServiceTest {
     @Test
     void testChangePasswordSuccess() {
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.identifier = "mazhar@gmail.com";
-        request.oldPassword = "12345";
-        request.newPassword = "99999";
+        request.setIdentifier("mazhar@gmail.com");
+        request.setOldPassword("12345");
+        request.setNewPassword("99999");
 
-        when(userRepository.findByEmail(request.identifier)).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(request.oldPassword, testUser.getPassword())).thenReturn(true);
-        when(passwordEncoder.encode(request.newPassword)).thenReturn("newEncodedPassword");
+        when(userRepository.findByEmail(request.getIdentifier())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(request.getOldPassword(), testUser.getPassword())).thenReturn(true);
+        when(passwordEncoder.encode(request.getNewPassword())).thenReturn("newEncodedPassword");
         when(userRepository.save(any(user.class))).thenReturn(testUser);
 
         String result = userService.changePassword(request);
@@ -142,12 +142,12 @@ public class UserServiceTest {
     @Test
     void testChangePasswordWrongOldPassword() {
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.identifier = "mazhar@gmail.com";
-        request.oldPassword = "wrongpassword";
-        request.newPassword = "99999";
+        request.setIdentifier("mazhar@gmail.com");
+        request.setOldPassword("wrongpassword");
+        request.setNewPassword("99999");
 
-        when(userRepository.findByEmail(request.identifier)).thenReturn(Optional.of(testUser));
-        when(passwordEncoder.matches(request.oldPassword, testUser.getPassword())).thenReturn(false);
+        when(userRepository.findByEmail(request.getIdentifier())).thenReturn(Optional.of(testUser));
+        when(passwordEncoder.matches(request.getOldPassword(), testUser.getPassword())).thenReturn(false);
 
         assertThrows(UnauthorizedException.class, () -> userService.changePassword(request));
     }
@@ -155,12 +155,12 @@ public class UserServiceTest {
     @Test
     void testChangePasswordUserNotFound() {
         ChangePasswordRequest request = new ChangePasswordRequest();
-        request.identifier = "notfound@gmail.com";
-        request.oldPassword = "12345";
-        request.newPassword = "99999";
+        request.setIdentifier("notfound@gmail.com");
+        request.setOldPassword("12345");
+        request.setNewPassword("99999");
 
-        when(userRepository.findByEmail(request.identifier)).thenReturn(Optional.empty());
-        when(userRepository.findByPhone(request.identifier)).thenReturn(Optional.empty());
+        when(userRepository.findByEmail(request.getIdentifier())).thenReturn(Optional.empty());
+        when(userRepository.findByPhone(request.getIdentifier())).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> userService.changePassword(request));
     }

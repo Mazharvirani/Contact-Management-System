@@ -77,27 +77,27 @@ public class UserService {
     }
 
     public String changePassword(ChangePasswordRequest request) {
-        log.info("Change password attempt for: {}", request.identifier);
+        log.info("Change password attempt for: {}", request.getIdentifier());
 
-        Optional<user> userOpt = userRepository.findByEmail(request.identifier);
+        Optional<user> userOpt = userRepository.findByEmail(request.getIdentifier());
         if (userOpt.isEmpty()) {
-            userOpt = userRepository.findByPhone(request.identifier);
+            userOpt = userRepository.findByPhone(request.getIdentifier());
         }
 
         if (userOpt.isEmpty()) {
-            log.warn("User not found: {}", request.identifier);
-            throw new ResourceNotFoundException("User not found: " + request.identifier);
+            log.warn("User not found: {}", request.getIdentifier());
+            throw new ResourceNotFoundException("User not found: " + request.getIdentifier());
         }
 
         user user = userOpt.get();
-        if (!passwordEncoder.matches(request.oldPassword, user.getPassword())) {
-            log.warn("Old password incorrect for: {}", request.identifier);
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            log.warn("Old password incorrect for: {}", request.getIdentifier());
             throw new UnauthorizedException("Old password is incorrect");
         }
 
-        user.setPassword(passwordEncoder.encode(request.newPassword));
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
         userRepository.save(user);
-        log.info("Password changed successfully for: {}", request.identifier);
+        log.info("Password changed successfully for: {}", request.getIdentifier());
         return "password updated";
     }
 
@@ -113,11 +113,11 @@ public class UserService {
         user u = userRepository.findByEmail(email).orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
 
         UserProfileResponse response = new UserProfileResponse();
-        response.id = u.getId();
-        response.name = u.getName();
-        response.email = u.getEmail();
-        response.phone = u.getPhone();
-        response.role = u.getRole();
+        response.setId(u.getId());
+        response.setName(u.getName());
+        response.setEmail(u.getEmail());
+        response.setPhone(u.getPhone());
+        response.setRole(u.getRole());
 
         return response;
     }
