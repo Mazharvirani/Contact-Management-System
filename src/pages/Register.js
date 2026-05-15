@@ -1,124 +1,202 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import {
+    Box, Card, CardContent, TextField, Button, Typography,
+    InputAdornment, IconButton, Alert, CircularProgress
+} from '@mui/material';
+import {
+    Email, Lock, Visibility, VisibilityOff, ContactPhone, Person, Phone
+} from '@mui/icons-material';
 import API from '../api/axios';
 
 function Register() {
-    const[form, setForm] = useState({
-        name:'',email:'',phone:'',password:''
+    const [form, setForm] = useState({
+        name: '', email: '', phone: '', password: ''
     });
+    const [showPassword, setShowPassword] = useState(false);
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
     const handleChange = (e) => {
-        setForm({...form, [e.target.name]: e.target.value});
+        setForm({ ...form, [e.target.name]: e.target.value });
     };
-const handleRegister = async (e) => {
-    e.preventDefault();
-    setError('');
-    try{
-        await API.post('/auth/register', form);
-        setSuccess('Registration successful! You can now login.');
-        setTimeout(() => navigate('/login'), 2000);
-    }catch(err){
-        setError(err.response?.data?.message || 'Registration failed.');
-    }
-};
+
+    const handleRegister = async (e) => {
+        e.preventDefault();
+        setError('');
+        setLoading(true);
+        try {
+            await API.post('/auth/register', form);
+            setSuccess('Registration successful! Redirecting to login...');
+            setTimeout(() => navigate('/login'), 2000);
+        } catch (err) {
+            setError(err.response?.data?.message || 'Registration failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
     return (
-        <div style={styles.container}>
-            <div style={styles.card}>
-                <h2 style={styles.title}>Contact Manager</h2>
-                <h3 style={styles.subtitle}>Register</h3>
-                {error && <p style={styles.error}>{error}</p>}
-                 {success && <p style={styles.success}>{success}</p>}
-                <form onSubmit={handleRegister}>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Name</label>
-                        <input style={styles.input} type="text" name="name"
-                            value={form.name} onChange={handleChange}
-                            placeholder="Enter your name" required />
-                    </div>
-                     <div style={styles.inputGroup}>
-                        <label style={styles.label}>Email</label>
-                        <input style={styles.input} type="email" name="email"
-                            value={form.email} onChange={handleChange}
-                            placeholder="Enter your email" required />
-                    </div>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Phone</label>
-                        <input style={styles.input} type="text" name="phone"
-                            value={form.phone} onChange={handleChange}
-                            placeholder="Enter your phone" required />
-                    </div>
-                    <div style={styles.inputGroup}>
-                        <label style={styles.label}>Password</label>
-                        <input style={styles.input} type="password" name="password"
-                            value={form.password} onChange={handleChange}
-                            placeholder="Enter your password" required />
-                    </div>
-                    <button style={styles.button} type="submit">Register</button>
-                </form>
-                <p style={styles.link}>
-                    Already have an account? <Link to="/login">Login</Link>
-                </p>
-            </div>
-        </div>
+        <Box sx={{
+            minHeight: '100vh',
+            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 2
+        }}>
+            <Card sx={{
+                width: '100%',
+                maxWidth: 420,
+                borderRadius: 4,
+                boxShadow: '0 20px 60px rgba(0,0,0,0.3)'
+            }}>
+                {/* Header */}
+                <Box sx={{
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    borderRadius: '16px 16px 0 0',
+                    padding: '30px 20px',
+                    textAlign: 'center',
+                    color: 'white'
+                }}>
+                    <ContactPhone sx={{ fontSize: 50, mb: 1 }} />
+                    <Typography variant="h5" fontWeight="bold">
+                        Create Account
+                    </Typography>
+                    <Typography variant="body2" sx={{ opacity: 0.85 }}>
+                        Join Contact Manager today
+                    </Typography>
+                </Box>
+
+                <CardContent sx={{ padding: '30px' }}>
+                    {error && (
+                        <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                            {error}
+                        </Alert>
+                    )}
+                    {success && (
+                        <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+                            {success}
+                        </Alert>
+                    )}
+
+                    <form onSubmit={handleRegister}>
+                        <TextField
+                            fullWidth
+                            label="Full Name"
+                            name="name"
+                            value={form.name}
+                            onChange={handleChange}
+                            margin="normal"
+                            required
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Person sx={{ color: '#667eea' }} />
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Email"
+                            name="email"
+                            type="email"
+                            value={form.email}
+                            onChange={handleChange}
+                            margin="normal"
+                            required
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Email sx={{ color: '#667eea' }} />
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Phone Number"
+                            name="phone"
+                            value={form.phone}
+                            onChange={handleChange}
+                            margin="normal"
+                            required
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Phone sx={{ color: '#667eea' }} />
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        />
+
+                        <TextField
+                            fullWidth
+                            label="Password"
+                            name="password"
+                            type={showPassword ? 'text' : 'password'}
+                            value={form.password}
+                            onChange={handleChange}
+                            margin="normal"
+                            required
+                            InputProps={{
+                                startAdornment: (
+                                    <InputAdornment position="start">
+                                        <Lock sx={{ color: '#667eea' }} />
+                                    </InputAdornment>
+                                ),
+                                endAdornment: (
+                                    <InputAdornment position="end">
+                                        <IconButton onClick={() => setShowPassword(!showPassword)}>
+                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        </IconButton>
+                                    </InputAdornment>
+                                )
+                            }}
+                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        />
+
+                        <Button
+                            fullWidth
+                            type="submit"
+                            variant="contained"
+                            disabled={loading}
+                            sx={{
+                                mt: 3,
+                                mb: 2,
+                                py: 1.5,
+                                borderRadius: 2,
+                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                fontSize: '16px',
+                                fontWeight: 'bold',
+                                textTransform: 'none',
+                                '&:hover': {
+                                    background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
+                                }
+                            }}
+                        >
+                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Create Account'}
+                        </Button>
+                    </form>
+
+                    <Typography textAlign="center" color="text.secondary">
+                        Already have an account?{' '}
+                        <Link to="/login" style={{ color: '#667eea', fontWeight: 'bold', textDecoration: 'none' }}>
+                            Sign in here
+                        </Link>
+                    </Typography>
+                </CardContent>
+            </Card>
+        </Box>
     );
 }
-const styles = {
-    container: {
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-        height: '100vh',
-        backgroundColor: '#f0f2f5'
-    },
-    card: {
-        backgroundColor: 'white',
-        padding: '40px',
-        borderRadius: '10px',
-        boxShadow: '0 2px 10px rgba(0,0,0,0.1)',
-        width: '400px'
-    },
-    title: {
-        textAlign: 'center',
-        color: '#1890ff',
-        marginBottom: '5px'
-    },
-    subtitle: {
-        textAlign: 'center',
-        color: '#333',
-        marginBottom: '20px'
-    },
-    error: { color: 'red', textAlign: 'center', marginBottom: '10px' },
-    success: { color: 'green', textAlign: 'center', marginBottom: '10px' },
-    inputGroup: { marginBottom: '15px' },
-    label: {
-        display: 'block',
-        marginBottom: '5px',
-        color: '#333',
-        fontWeight: 'bold'
-    },
-    input: {
-        width: '100%',
-        padding: '10px',
-        borderRadius: '5px',
-        border: '1px solid #ddd',
-        fontSize: '14px',
-        boxSizing: 'border-box'
-    },
-    button: {
-        width: '100%',
-        padding: '10px',
-        backgroundColor: '#1890ff',
-        color: 'white',
-        border: 'none',
-        borderRadius: '5px',
-        fontSize: '16px',
-        cursor: 'pointer',
-        marginTop: '10px'
-    },
-    link: { textAlign: 'center', marginTop: '15px' }
-};
 
 export default Register;
