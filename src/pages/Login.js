@@ -2,11 +2,9 @@ import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import {
     Box, Card, CardContent, TextField, Button, Typography,
-    InputAdornment, IconButton, Alert, CircularProgress
+    InputAdornment, IconButton, Alert, CircularProgress, Divider
 } from '@mui/material';
-import {
-    Email, Lock, Visibility, VisibilityOff, ContactPhone
-} from '@mui/icons-material';
+    import { Visibility, VisibilityOff, ContactsOutlined } from '@mui/icons-material';
 import API from '../api/axios';
 
 function Login() {
@@ -35,37 +33,41 @@ function Login() {
     return (
         <Box sx={{
             minHeight: '100vh',
-            background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            backgroundColor: '#f8f9fa',
             display: 'flex',
+            flexDirection: 'column',
             alignItems: 'center',
             justifyContent: 'center',
             padding: 2
         }}>
+            {/* Logo */}
+            <Box sx={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 1,
+                mb: 3
+            }}>
+                <ContactsOutlined sx={{ fontSize: 40, color: '#1a1a2e' }} />
+                <Typography variant="h5" fontWeight="bold" color="#1a1a2e">
+                    Contact Manager
+                </Typography>
+            </Box>
+
             <Card sx={{
                 width: '100%',
-                maxWidth: 420,
-                borderRadius: 4,
-                boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-                overflow: 'visible'
+                maxWidth: 500,
+                borderRadius: 3,
+                boxShadow: '0 4px 20px rgba(0,0,0,0.08)',
+                border: '1px solid #e9ecef'
             }}>
-                {/* Header */}
-                <Box sx={{
-                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                    borderRadius: '16px 16px 0 0',
-                    padding: '30px 20px',
-                    textAlign: 'center',
-                    color: 'white'
-                }}>
-                    <ContactPhone sx={{ fontSize: 50, mb: 1 }} />
-                    <Typography variant="h5" fontWeight="bold">
-                        Contact Manager
+                <CardContent sx={{ padding: '32px' }}>
+                    <Typography variant="h5" fontWeight="bold" color="#1a1a2e" mb={0.5}>
+                        Sign in
                     </Typography>
-                    <Typography variant="body2" sx={{ opacity: 0.85 }}>
-                        Sign in to manage your contacts
+                    <Typography variant="body2" color="text.secondary" mb={3}>
+                        Welcome back to Contact Manager
                     </Typography>
-                </Box>
 
-                <CardContent sx={{ padding: '30px' }}>
                     {error && (
                         <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
                             {error}
@@ -73,46 +75,55 @@ function Login() {
                     )}
 
                     <form onSubmit={handleLogin}>
+                        <Typography variant="body2" fontWeight="600" color="#1a1a2e" mb={0.5}>
+                            Email
+                        </Typography>
                         <TextField
                             fullWidth
-                            label="Email or Phone"
                             value={identifier}
                             onChange={(e) => setIdentifier(e.target.value)}
-                            margin="normal"
+                            placeholder="Enter your email or phone"
                             required
-                            InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Email sx={{ color: '#667eea' }} />
-                                    </InputAdornment>
-                                )
+                            size="small"
+                            sx={{
+                                mb: 2,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                    backgroundColor: '#fff'
+                                }
                             }}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                         />
 
+                        <Typography variant="body2" fontWeight="600" color="#1a1a2e" mb={0.5}>
+                            Password
+                        </Typography>
                         <TextField
                             fullWidth
-                            label="Password"
                             type={showPassword ? 'text' : 'password'}
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            margin="normal"
+                            placeholder="Enter your password"
                             required
+                            size="small"
                             InputProps={{
-                                startAdornment: (
-                                    <InputAdornment position="start">
-                                        <Lock sx={{ color: '#667eea' }} />
-                                    </InputAdornment>
-                                ),
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton onClick={() => setShowPassword(!showPassword)}>
-                                            {showPassword ? <VisibilityOff /> : <Visibility />}
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
+                                            {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                                         </IconButton>
                                     </InputAdornment>
                                 )
                             }}
-                            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                            sx={{
+                                mb: 3,
+                                '& .MuiOutlinedInput-root': {
+                                    borderRadius: 2,
+                                    backgroundColor: '#fff'
+                                }
+                            }}
                         />
 
                         <Button
@@ -121,27 +132,25 @@ function Login() {
                             variant="contained"
                             disabled={loading}
                             sx={{
-                                mt: 3,
-                                mb: 2,
-                                py: 1.5,
+                                py: 1.2,
                                 borderRadius: 2,
-                                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-                                fontSize: '16px',
+                                backgroundColor: '#1a1a2e',
+                                fontSize: '15px',
                                 fontWeight: 'bold',
                                 textTransform: 'none',
-                                '&:hover': {
-                                    background: 'linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%)',
-                                }
+                                '&:hover': { backgroundColor: '#2d2d44' }
                             }}
                         >
-                            {loading ? <CircularProgress size={24} color="inherit" /> : 'Sign In'}
+                            {loading ? <CircularProgress size={22} color="inherit" /> : 'Sign in'}
                         </Button>
                     </form>
 
-                    <Typography textAlign="center" color="text.secondary">
-                        Don't have an account?{' '}
-                        <Link to="/register" style={{ color: '#667eea', fontWeight: 'bold', textDecoration: 'none' }}>
-                            Register here
+                    <Divider sx={{ my: 2 }} />
+
+                    <Typography textAlign="center" variant="body2" color="text.secondary">
+                        No account?{' '}
+                        <Link to="/register" style={{ color: '#1a1a2e', fontWeight: 'bold', textDecoration: 'none' }}>
+                            Register
                         </Link>
                     </Typography>
                 </CardContent>
