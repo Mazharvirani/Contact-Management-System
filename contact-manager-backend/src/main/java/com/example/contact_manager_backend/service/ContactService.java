@@ -53,7 +53,7 @@ public class ContactService {
 
         List<PhoneEntry> phones = request.phones.stream().map(p -> {
             PhoneEntry entry = new PhoneEntry();
-            entry.setPhone(p.Phone);
+            entry.setPhone(p.phone);
             entry.setLabel(p.label);
             entry.setContact(contact);
             return entry;
@@ -109,7 +109,7 @@ public class ContactService {
         contact.getPhones().clear();
         request.phones.forEach(p -> {
             PhoneEntry entry = new PhoneEntry();
-            entry.setPhone(p.Phone);
+            entry.setPhone(p.phone);
             entry.setLabel(p.label);
             entry.setContact(contact);
             contact.getPhones().add(entry);

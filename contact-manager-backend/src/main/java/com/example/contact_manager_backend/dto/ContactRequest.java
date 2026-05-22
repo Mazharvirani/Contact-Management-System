@@ -12,7 +12,7 @@ public class ContactRequest {
         public String label;
     }
     public static class PhoneDto{
-        public String Phone;
+        public String phone;
         public String label;
     }
 }
