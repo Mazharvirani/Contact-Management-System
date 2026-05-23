@@ -3,6 +3,7 @@ package com.example.contact_manager_backend;
 import com.example.contact_manager_backend.controller.UserController;
 import com.example.contact_manager_backend.dto.ChangePasswordRequest;
 import com.example.contact_manager_backend.dto.UserProfileResponse;
+import com.example.contact_manager_backend.exception.ResourceNotFoundException;
 import com.example.contact_manager_backend.service.UserService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,5 +57,14 @@ class UserControllerTest {
 
         assertEquals(200, response.getStatusCode().value());
         assertEquals("Mazhar", response.getBody().getName());
+    }
+    @Test
+    void testGetProfileNotAuthenticated() {
+        when(authentication.getName()).thenReturn("mazhar@gmail.com");
+        when(userService.getprofile("mazhar@gmail.com"))
+                .thenThrow(new ResourceNotFoundException("User not found"));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> userController.getProfile(authentication));
     }
 }

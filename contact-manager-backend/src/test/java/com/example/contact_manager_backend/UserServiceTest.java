@@ -164,4 +164,63 @@ class UserServiceTest {
 
         assertThrows(ResourceNotFoundException.class, () -> userService.changePassword(request));
     }
+    @Test
+    void testGetEmailFromIdentifierByEmail() {
+        when(userRepository.findByEmail("mazhar@gmail.com")).thenReturn(Optional.of(testUser));
+
+        String email = userService.getEmailFromIdentifier("mazhar@gmail.com");
+
+        assertEquals("mazhar@gmail.com", email);
+    }
+
+    @Test
+    void testGetEmailFromIdentifierByPhone() {
+        when(userRepository.findByEmail("03001234567")).thenReturn(Optional.empty());
+        when(userRepository.findByPhone("03001234567")).thenReturn(Optional.of(testUser));
+
+        String email = userService.getEmailFromIdentifier("03001234567");
+
+        assertEquals("mazhar@gmail.com", email);
+    }
+
+    @Test
+    void testGetEmailFromIdentifierNotFound() {
+        when(userRepository.findByEmail("notfound@gmail.com")).thenReturn(Optional.empty());
+        when(userRepository.findByPhone("notfound@gmail.com")).thenReturn(Optional.empty());
+
+        String email = userService.getEmailFromIdentifier("notfound@gmail.com");
+
+        assertNull(email);
+    }
+
+    @Test
+    void testRegisterDuplicatePhone() {
+        RegisterRequest request = new RegisterRequest();
+        request.email = "new@gmail.com";
+        request.phone = "03001234567";
+
+        when(userRepository.findByEmail(request.email)).thenReturn(Optional.empty());
+        when(userRepository.findByPhone(request.phone)).thenReturn(Optional.of(testUser));
+
+        assertThrows(DuplicateResourceException.class, () -> userService.register(request));
+        verify(userRepository, never()).save(any());
+    }
+
+    @Test
+    void testGetProfileSuccess() {
+        when(userRepository.findByEmail("mazhar@gmail.com")).thenReturn(Optional.of(testUser));
+
+        var response = userService.getprofile("mazhar@gmail.com");
+
+        assertNotNull(response);
+        assertEquals("mazhar@gmail.com", response.getEmail());
+        assertEquals("Mazhar", response.getName());
+    }
+
+    @Test
+    void testGetProfileNotFound() {
+        when(userRepository.findByEmail("notfound@gmail.com")).thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class, () -> userService.getprofile("notfound@gmail.com"));
+    }
 }

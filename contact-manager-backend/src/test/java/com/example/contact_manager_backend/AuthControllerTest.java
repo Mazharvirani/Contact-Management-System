@@ -73,4 +73,38 @@ class AuthControllerTest {
 
         assertEquals("invalid credentials", result);
     }
+    @Test
+    void testLoginWithPhone() {
+        LoginRequest request = new LoginRequest();
+        request.identifier = "03001234567";
+        request.password = "12345";
+
+        when(userService.login(request)).thenReturn(true);
+        when(userService.getEmailFromIdentifier(request.identifier)).thenReturn("mazhar@gmail.com");
+        when(jwtUtil.generateToken("mazhar@gmail.com")).thenReturn("mock.jwt.token");
+
+        String result = authController.login(request);
+
+        assertEquals("mock.jwt.token", result);
+    }
+    @Test
+    void testRegisterWithDifferentUser() {
+        RegisterRequest request = new RegisterRequest();
+        request.name = "Ali";
+        request.email = "ali@gmail.com";
+        request.phone = "03009876543";
+        request.password = "password123";
+
+        user mockUser = new user();
+        mockUser.setEmail("ali@gmail.com");
+        mockUser.setName("Ali");
+
+        when(userService.register(request)).thenReturn(mockUser);
+
+        user result = authController.register(request);
+
+        assertNotNull(result);
+        assertEquals("ali@gmail.com", result.getEmail());
+        assertEquals("Ali", result.getName());
+    }
 }

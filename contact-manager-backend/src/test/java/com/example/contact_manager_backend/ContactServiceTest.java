@@ -139,7 +139,6 @@ import static org.mockito.Mockito.*;
         verify(contactRepository, times(1)).save(any(Contact.class));
     }
 
-    // ✅ Test Update Contact Not Found
     @Test
     void testUpdateContactNotFound() {
         when(contactRepository.findById(99L)).thenReturn(Optional.empty());
@@ -163,5 +162,45 @@ import static org.mockito.Mockito.*;
 
         assertThrows(ResourceNotFoundException.class,
                 () -> contactService.deleteContact("mazhar@gmail.com", 99L));
+    }
+    @Test
+    void testSearchContacts() {
+        List<Contact> contacts = List.of(testContact);
+        Page<Contact> page = new PageImpl<>(contacts);
+
+        when(contactRepository
+                .findByOwnerEmailAndFirstNameContainingIgnoreCaseOrOwnerEmailAndLastNameContainingIgnoreCase(
+                        "mazhar@gmail.com", "john",
+                        "mazhar@gmail.com", "john",
+                        PageRequest.of(0, 10)))
+                .thenReturn(page);
+
+        Page<ContactResponse> result = contactService.searchContacts("mazhar@gmail.com", "john", 0, 10);
+
+        assertNotNull(result);
+        assertEquals(1, result.getTotalElements());
+    }
+
+    @Test
+    void testCreateContactWithEmailsAndPhones() {
+        when(userRepository.findByEmail("mazhar@gmail.com")).thenReturn(Optional.of(testUser));
+
+        ContactRequest.EmailDto emailDto = new ContactRequest.EmailDto();
+        emailDto.email = "john@work.com";
+        emailDto.label = "work";
+
+        ContactRequest.PhoneDto phoneDto = new ContactRequest.PhoneDto();
+        phoneDto.phone = "03001234567";
+        phoneDto.label = "home";
+
+        testRequest.emails = List.of(emailDto);
+        testRequest.phones = List.of(phoneDto);
+
+        when(contactRepository.save(any(Contact.class))).thenReturn(testContact);
+
+        ContactResponse response = contactService.createContact("mazhar@gmail.com", testRequest);
+
+        assertNotNull(response);
+        verify(contactRepository, times(1)).save(any(Contact.class));
     }
 }
