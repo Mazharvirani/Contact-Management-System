@@ -1,0 +1,6 @@
+projectKey=contact-managment-frontend
+serverUrl=http://localhost:9000
+serverVersion=26.4.0.121862
+dashboardUrl=http://localhost:9000/dashboard?id=contact-managment-frontend
+ceTaskId=a71cfa58-c009-4655-a00a-c3435fb910bc
+ceTaskUrl=http://localhost:9000/api/ce/task?id=a71cfa58-c009-4655-a00a-c3435fb910bc
