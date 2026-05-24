@@ -53,8 +53,8 @@ public class ContactService {
 
         List<PhoneEntry> phones = request.phones.stream().map(p -> {
             PhoneEntry entry = new PhoneEntry();
-            entry.setPhone(p.phone);
-            entry.setLabel(p.label);
+            entry.setPhone(p.getPhone());
+            entry.setLabel(p.getLabel());
             entry.setContact(contact);
             return entry;
         }).collect(Collectors.toList());
@@ -109,8 +109,8 @@ public class ContactService {
         contact.getPhones().clear();
         request.phones.forEach(p -> {
             PhoneEntry entry = new PhoneEntry();
-            entry.setPhone(p.phone);
-            entry.setLabel(p.label);
+            entry.setPhone(p.getPhone());
+            entry.setLabel(p.getLabel());
             entry.setContact(contact);
             contact.getPhones().add(entry);
         });

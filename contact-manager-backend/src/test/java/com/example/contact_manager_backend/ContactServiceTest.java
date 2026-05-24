@@ -190,8 +190,8 @@ import static org.mockito.Mockito.*;
         emailDto.label = "work";
 
         ContactRequest.PhoneDto phoneDto = new ContactRequest.PhoneDto();
-        phoneDto.phone = "03001234567";
-        phoneDto.label = "home";
+        phoneDto.setPhone("03001234567");
+        phoneDto.setLabel("home");
 
         testRequest.emails = List.of(emailDto);
         testRequest.phones = List.of(phoneDto);
