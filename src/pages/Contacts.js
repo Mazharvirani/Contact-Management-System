@@ -114,13 +114,43 @@ function Contacts() {
         navigate('/login');
     };
 
-    // Group contacts alphabetically
     const grouped = contacts.reduce((acc, contact) => {
         const letter = contact.firstName?.charAt(0).toUpperCase() || '#';
         if (!acc[letter]) acc[letter] = [];
         acc[letter].push(contact);
         return acc;
     }, {});
+
+    const handleExport = async () => {
+        try {
+            const res = await API.get('/contacts/export', { responseType: 'blob' });
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', 'contacts.csv');
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+        } catch {
+            setError('Export failed');
+        }
+    };
+
+    const handleImport = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+            await API.post('/contacts/import', formData, {
+                headers: { 'Content-Type': 'multipart/form-data' }
+            });
+            fetchContacts();
+        } catch {
+            setError('Import failed');
+        }
+    };
+
 
     return (
         <Box sx={{ minHeight: '100vh', backgroundColor: '#f8f9fa', display: 'flex', flexDirection: 'column' }}>
@@ -157,6 +187,30 @@ function Contacts() {
                             <Typography variant="h5" fontWeight="bold" color="#1a1a2e">Contacts</Typography>
                             <Typography variant="body2" color="text.secondary">{total} contacts</Typography>
                         </Box>
+                         <Box sx={{ display: 'flex', gap: 1 }}>
+                        <Button
+                            variant="outlined"
+                            onClick={handleExport}
+                            sx={{
+                                borderRadius: 2, textTransform: 'none',
+                                borderColor: '#1a1a2e', color: '#1a1a2e',
+                                fontWeight: 'bold',
+                                '&:hover': { backgroundColor: '#f0f0f5' }
+                            }}>
+                            Export CSV
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            component="label"
+                            sx={{
+                                borderRadius: 2, textTransform: 'none',
+                                borderColor: '#1a1a2e', color: '#1a1a2e',
+                                fontWeight: 'bold',
+                                '&:hover': { backgroundColor: '#f0f0f5' }
+                            }}>
+                            Import CSV
+                            <input type="file" accept=".csv" hidden onChange={handleImport} />
+                        </Button>
                         <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}
                             sx={{
                                 backgroundColor: '#1a1a2e', borderRadius: 2,
@@ -166,6 +220,9 @@ function Contacts() {
                             New contact
                         </Button>
                     </Box>
+                    </Box>
+                   
+
 
                     {/* Search */}
                     <TextField fullWidth placeholder="Search by first or last name..."
@@ -175,7 +232,7 @@ function Contacts() {
                         InputProps={{
                             startAdornment: <InputAdornment position="start"><Search sx={{ color: '#aaa' }} /></InputAdornment>
                         }}
-                        sx={{ mb: 2, backgroundColor: 'white', '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+                        sx={{ mb: 5,mt: 2, backgroundColor: 'white', '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
                     />
 
                     {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
