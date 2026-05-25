@@ -15,7 +15,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -151,5 +153,86 @@ public class ContactService {
         }).collect(Collectors.toList());
 
         return response;
+    }
+    public String exportContacts(String email) {
+        log.info("Exporting contacts for user: {}", email);
+        List<Contact> contacts = contactRepository
+                .findByOwnerEmail(email, PageRequest.of(0, 1000))
+                .getContent();
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("First Name,Last Name,Title,Emails,Phones\n");
+
+        for (Contact contact : contacts) {
+            String emails = contact.getEmails().stream()
+                    .map(e -> e.getEmail() + "(" + e.getLabel() + ")")
+                    .collect(Collectors.joining("|"));
+            String phones = contact.getPhones().stream()
+                    .map(p -> p.getPhone() + "(" + p.getLabel() + ")")
+                    .collect(Collectors.joining("|"));
+
+            csv.append(String.format("%s,%s,%s,%s,%s\n",
+                    contact.getFirstName(),
+                    contact.getLastName(),
+                    contact.getTitle() != null ? contact.getTitle() : "",
+                    emails,
+                    phones));
+        }
+        return csv.toString();
+    }
+
+    public void importContacts(String email, MultipartFile file) throws Exception {
+        log.info("Importing contacts for user: {}", email);
+        user owner = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
+
+        String content = new String(file.getBytes());
+        String[] lines = content.split("\n");
+
+        for (int i = 1; i < lines.length; i++) {
+            String[] fields = lines[i].split(",");
+            if (fields.length < 2) continue;
+
+            Contact contact = new Contact();
+            contact.setFirstName(fields[0].trim());
+            contact.setLastName(fields[1].trim());
+            contact.setTitle(fields.length > 2 ? fields[2].trim() : "");
+            contact.setOwner(owner);
+            contact.setEmails(new ArrayList<>());
+            contact.setPhones(new ArrayList<>());
+
+            if (fields.length > 3 && !fields[3].trim().isEmpty()) {
+                String[] emailParts = fields[3].split("\\|");
+                for (String ep : emailParts) {
+                    EmailEntry emailEntry = new EmailEntry();
+                    if (ep.contains("(")) {
+                        emailEntry.setEmail(ep.substring(0, ep.indexOf("(")));
+                        emailEntry.setLabel(ep.substring(ep.indexOf("(") + 1, ep.indexOf(")")));
+                    } else {
+                        emailEntry.setEmail(ep.trim());
+                        emailEntry.setLabel("work");
+                    }
+                    emailEntry.setContact(contact);
+                    contact.getEmails().add(emailEntry);
+                }
+            }
+
+            if (fields.length > 4 && !fields[4].trim().isEmpty()) {
+                String[] phoneParts = fields[4].split("\\|");
+                for (String pp : phoneParts) {
+                    PhoneEntry phoneEntry = new PhoneEntry();
+                    if (pp.contains("(")) {
+                        phoneEntry.setPhone(pp.substring(0, pp.indexOf("(")));
+                        phoneEntry.setLabel(pp.substring(pp.indexOf("(") + 1, pp.indexOf(")")));
+                    } else {
+                        phoneEntry.setPhone(pp.trim());
+                        phoneEntry.setLabel("home");
+                    }
+                    phoneEntry.setContact(contact);
+                    contact.getPhones().add(phoneEntry);
+                }
+            }
+            contactRepository.save(contact);
+        }
     }
 }

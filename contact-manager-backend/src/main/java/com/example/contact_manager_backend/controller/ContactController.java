@@ -9,6 +9,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @RequestMapping("/contacts")
@@ -75,5 +76,24 @@ public class ContactController {
         log.info("Deleting contact id: {} for user: {}", id, auth.getName());
         contactService.deleteContact(auth.getName(), id);
         return ResponseEntity.ok("Contact deleted successfully");
+    }
+    @GetMapping("/export")
+    public ResponseEntity<byte[]> exportContacts(Authentication auth) throws Exception {
+        log.info("Exporting contacts for user: {}", auth.getName());
+        String csv = contactService.exportContacts(auth.getName());
+        byte[] bytes = csv.getBytes();
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=contacts.csv")
+                .header("Content-Type", "text/csv")
+                .body(bytes);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<String> importContacts(
+            Authentication auth,
+            @RequestParam("file") MultipartFile file) throws Exception {
+        log.info("Importing contacts for user: {}", auth.getName());
+        contactService.importContacts(auth.getName(), file);
+        return ResponseEntity.ok("Contacts imported successfully");
     }
 }
