@@ -181,58 +181,78 @@ public class ContactService {
         return csv.toString();
     }
 
-    public void importContacts(String email, MultipartFile file) throws Exception {
+    public void importContacts(String email, MultipartFile file) {
         log.info("Importing contacts for user: {}", email);
         user owner = userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found: " + email));
 
-        String content = new String(file.getBytes());
-        String[] lines = content.split("\n");
-
-        for (int i = 1; i < lines.length; i++) {
-            String[] fields = lines[i].split(",");
-            if (fields.length < 2) continue;
-
-            Contact contact = new Contact();
-            contact.setFirstName(fields[0].trim());
-            contact.setLastName(fields[1].trim());
-            contact.setTitle(fields.length > 2 ? fields[2].trim() : "");
-            contact.setOwner(owner);
-            contact.setEmails(new ArrayList<>());
-            contact.setPhones(new ArrayList<>());
-
-            if (fields.length > 3 && !fields[3].trim().isEmpty()) {
-                String[] emailParts = fields[3].split("\\|");
-                for (String ep : emailParts) {
-                    EmailEntry emailEntry = new EmailEntry();
-                    if (ep.contains("(")) {
-                        emailEntry.setEmail(ep.substring(0, ep.indexOf("(")));
-                        emailEntry.setLabel(ep.substring(ep.indexOf("(") + 1, ep.indexOf(")")));
-                    } else {
-                        emailEntry.setEmail(ep.trim());
-                        emailEntry.setLabel("work");
-                    }
-                    emailEntry.setContact(contact);
-                    contact.getEmails().add(emailEntry);
-                }
+        try {
+            String content = new String(file.getBytes());
+            String[] lines = content.split("\n");
+            for (int i = 1; i < lines.length; i++) {
+                processContactLine(lines[i].trim(), owner);
             }
+        } catch (IllegalArgumentException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new IllegalStateException("Failed to import contacts", e);
+        }
+    }
 
-            if (fields.length > 4 && !fields[4].trim().isEmpty()) {
-                String[] phoneParts = fields[4].split("\\|");
-                for (String pp : phoneParts) {
-                    PhoneEntry phoneEntry = new PhoneEntry();
-                    if (pp.contains("(")) {
-                        phoneEntry.setPhone(pp.substring(0, pp.indexOf("(")));
-                        phoneEntry.setLabel(pp.substring(pp.indexOf("(") + 1, pp.indexOf(")")));
-                    } else {
-                        phoneEntry.setPhone(pp.trim());
-                        phoneEntry.setLabel("home");
-                    }
-                    phoneEntry.setContact(contact);
-                    contact.getPhones().add(phoneEntry);
-                }
+    private void processContactLine(String line, user owner) {
+        if (line.isEmpty()) return;
+        String[] fields = line.split(",");
+        if (fields.length < 2) return;
+
+        Contact contact = buildContact(fields, owner);
+        contactRepository.save(contact);
+    }
+
+    private Contact buildContact(String[] fields, user owner) {
+        Contact contact = new Contact();
+        contact.setFirstName(fields[0].trim());
+        contact.setLastName(fields[1].trim());
+        contact.setTitle(fields.length > 2 ? fields[2].trim() : "");
+        contact.setOwner(owner);
+        contact.setEmails(new ArrayList<>());
+        contact.setPhones(new ArrayList<>());
+
+        if (fields.length > 3 && !fields[3].trim().isEmpty()) {
+            addEmails(contact, fields[3]);
+        }
+        if (fields.length > 4 && !fields[4].trim().isEmpty()) {
+            addPhones(contact, fields[4]);
+        }
+        return contact;
+    }
+
+    private void addEmails(Contact contact, String emailsField) {
+        for (String ep : emailsField.split("\\|")) {
+            EmailEntry emailEntry = new EmailEntry();
+            if (ep.contains("(")) {
+                emailEntry.setEmail(ep.substring(0, ep.indexOf("(")).trim());
+                emailEntry.setLabel(ep.substring(ep.indexOf("(") + 1, ep.indexOf(")")));
+            } else {
+                emailEntry.setEmail(ep.trim());
+                emailEntry.setLabel("work");
             }
-            contactRepository.save(contact);
+            emailEntry.setContact(contact);
+            contact.getEmails().add(emailEntry);
+        }
+    }
+
+    private void addPhones(Contact contact, String phonesField) {
+        for (String pp : phonesField.split("\\|")) {
+            PhoneEntry phoneEntry = new PhoneEntry();
+            if (pp.contains("(")) {
+                phoneEntry.setPhone(pp.substring(0, pp.indexOf("(")).trim());
+                phoneEntry.setLabel(pp.substring(pp.indexOf("(") + 1, pp.indexOf(")")));
+            } else {
+                phoneEntry.setPhone(pp.trim());
+                phoneEntry.setLabel("home");
+            }
+            phoneEntry.setContact(contact);
+            contact.getPhones().add(phoneEntry);
         }
     }
 }

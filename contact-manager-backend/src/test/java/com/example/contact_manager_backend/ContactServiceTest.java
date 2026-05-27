@@ -17,6 +17,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.mock.web.MockMultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -202,5 +203,171 @@ import static org.mockito.Mockito.*;
 
         assertNotNull(response);
         verify(contactRepository, times(1)).save(any(Contact.class));
+    }
+    @Test
+    void testDeleteContactWrongUser() {
+        when(contactRepository.findById(1L)).thenReturn(Optional.of(testContact));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> contactService.deleteContact("wrong@gmail.com", 1L));
+    }
+
+    @Test
+    void testUpdateContactWrongUser() {
+        when(contactRepository.findById(1L)).thenReturn(Optional.of(testContact));
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> contactService.updateContact("wrong@gmail.com", 1L, testRequest));
+    }
+
+    @Test
+    void testExportContacts() {
+        List<Contact> contacts = List.of(testContact);
+        Page<Contact> page = new PageImpl<>(contacts);
+
+        when(contactRepository.findByOwnerEmail(
+                "mazhar@gmail.com",
+                PageRequest.of(0, 1000)))
+                .thenReturn(page);
+
+        String csv = contactService.exportContacts("mazhar@gmail.com");
+
+        assertNotNull(csv);
+        assertTrue(csv.contains("First Name"));
+        assertTrue(csv.contains("John"));
+        assertTrue(csv.contains("Doe"));
+    }
+
+    @Test
+    void testImportContactsSuccess() {
+
+        String csv =
+                "First Name,Last Name,Title,Emails,Phones\n" +
+                        "Ali,Khan,Developer,ali@gmail.com(work),03001234567(home)";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "contacts.csv",
+                "text/csv",
+                csv.getBytes()
+        );
+
+        when(userRepository.findByEmail("mazhar@gmail.com"))
+                .thenReturn(Optional.of(testUser));
+
+        when(contactRepository.save(any(Contact.class)))
+                .thenReturn(testContact);
+
+        assertDoesNotThrow(() ->
+                contactService.importContacts("mazhar@gmail.com", file));
+
+        verify(contactRepository, times(1))
+                .save(any(Contact.class));
+    }
+
+    @Test
+    void testImportContactsUserNotFound() {
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "contacts.csv",
+                "text/csv",
+                "data".getBytes()
+        );
+
+        when(userRepository.findByEmail("wrong@gmail.com"))
+                .thenReturn(Optional.empty());
+
+        assertThrows(ResourceNotFoundException.class,
+                () -> contactService.importContacts("wrong@gmail.com", file));
+    }
+
+    @Test
+    void testImportContactsInvalidFile() throws Exception{
+
+        MockMultipartFile file = mock(MockMultipartFile.class);
+
+        when(userRepository.findByEmail("mazhar@gmail.com"))
+                .thenReturn(Optional.of(testUser));
+
+        when(file.getBytes()).thenThrow(new RuntimeException("File error"));
+
+        assertThrows(RuntimeException.class,
+                () -> contactService.importContacts("mazhar@gmail.com", file));
+    }
+
+    @Test
+    void testImportContactsWithEmptyLines(){
+
+        String csv = """
+        First Name,Last Name,Title,Emails,Phones
+        Ahmed,Ali,Manager,,
+        """;
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "contacts.csv",
+                "text/csv",
+                csv.getBytes()
+        );
+
+        when(userRepository.findByEmail("mazhar@gmail.com"))
+                .thenReturn(Optional.of(testUser));
+
+        when(contactRepository.save(any(Contact.class)))
+                .thenReturn(testContact);
+
+        contactService.importContacts("mazhar@gmail.com", file);
+
+        verify(contactRepository, times(1))
+                .save(any(Contact.class));
+    }
+
+    @Test
+    void testImportContactsWithoutLabels(){
+
+        String csv =
+                "First Name,Last Name,Title,Emails,Phones\n" +
+                        "Ali,Khan,Developer,ali@gmail.com,03001234567";
+
+        MockMultipartFile file = new MockMultipartFile(
+                "file",
+                "contacts.csv",
+                "text/csv",
+                csv.getBytes()
+        );
+
+        when(userRepository.findByEmail("mazhar@gmail.com"))
+                .thenReturn(Optional.of(testUser));
+
+        when(contactRepository.save(any(Contact.class)))
+                .thenReturn(testContact);
+
+        assertDoesNotThrow(() ->
+                contactService.importContacts("mazhar@gmail.com", file));
+
+        verify(contactRepository, times(1))
+                .save(any(Contact.class));
+    }
+
+    @Test
+    void testCreateContactWithEmptyEmailsAndPhones() {
+
+        when(userRepository.findByEmail("mazhar@gmail.com"))
+                .thenReturn(Optional.of(testUser));
+
+        testRequest.emails = new ArrayList<>();
+        testRequest.phones = new ArrayList<>();
+
+        when(contactRepository.save(any(Contact.class)))
+                .thenReturn(testContact);
+
+        ContactResponse response =
+                contactService.createContact("mazhar@gmail.com", testRequest);
+
+        assertNotNull(response);
+
+        verify(contactRepository, times(1))
+                .save(any(Contact.class));
     }
 }

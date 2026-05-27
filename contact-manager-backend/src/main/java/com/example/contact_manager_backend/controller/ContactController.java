@@ -78,7 +78,7 @@ public class ContactController {
         return ResponseEntity.ok("Contact deleted successfully");
     }
     @GetMapping("/export")
-    public ResponseEntity<byte[]> exportContacts(Authentication auth) throws Exception {
+    public ResponseEntity<byte[]> exportContacts(Authentication auth) {
         log.info("Exporting contacts for user: {}", auth.getName());
         String csv = contactService.exportContacts(auth.getName());
         byte[] bytes = csv.getBytes();
@@ -91,7 +91,7 @@ public class ContactController {
     @PostMapping("/import")
     public ResponseEntity<String> importContacts(
             Authentication auth,
-            @RequestParam("file") MultipartFile file) throws Exception {
+            @RequestParam("file") MultipartFile file) {
         log.info("Importing contacts for user: {}", auth.getName());
         contactService.importContacts(auth.getName(), file);
         return ResponseEntity.ok("Contacts imported successfully");
