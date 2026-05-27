@@ -124,7 +124,7 @@ function Contacts() {
     const handleExport = async () => {
         try {
             const res = await API.get('/contacts/export', { responseType: 'blob' });
-            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const url = URL.createObjectURL(new Blob([res.data]));
             const link = document.createElement('a');
             link.href = url;
             link.setAttribute('download', 'contacts.csv');
@@ -208,7 +208,7 @@ function Contacts() {
                                 fontWeight: 'bold',
                                 '&:hover': { backgroundColor: '#f0f0f5' }
                             }}>
-                            Import CSV
+                            <span>Import CSV</span>
                             <input type="file" accept=".csv" hidden onChange={handleImport} />
                         </Button>
                         <Button variant="contained" startIcon={<Add />} onClick={handleOpenCreate}
