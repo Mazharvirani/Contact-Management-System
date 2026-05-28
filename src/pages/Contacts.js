@@ -334,7 +334,8 @@ function Contacts() {
                                 color: 'white',
                                 position: 'relative'
                             }}>
-                                <IconButton onClick={() => setSelected(null)}
+                                <IconButton aria-label="close"
+                                onClick={() => setSelected(null)}
                                     sx={{ position: 'absolute', top: 12, right: 12, color: 'rgba(255,255,255,0.7)' }}>
                                     <Close />
                                 </IconButton>

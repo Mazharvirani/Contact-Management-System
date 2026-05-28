@@ -2,5 +2,5 @@ projectKey=contact-managment-frontend
 serverUrl=http://localhost:9000
 serverVersion=26.4.0.121862
 dashboardUrl=http://localhost:9000/dashboard?id=contact-managment-frontend
-ceTaskId=94c68aff-5650-41d8-975f-a1300e2459c6
-ceTaskUrl=http://localhost:9000/api/ce/task?id=94c68aff-5650-41d8-975f-a1300e2459c6
+ceTaskId=a0b0ffbb-c8a4-4a7a-9bba-1d6645b226f5
+ceTaskUrl=http://localhost:9000/api/ce/task?id=a0b0ffbb-c8a4-4a7a-9bba-1d6645b226f5

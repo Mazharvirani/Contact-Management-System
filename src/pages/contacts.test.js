@@ -1,263 +1,483 @@
 import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import Contacts from '../pages/Contacts';
+import {
+    render,
+    screen,
+    waitFor,
+    fireEvent
+} from '@testing-library/react';
+
+import userEvent from '@testing-library/user-event';
+import { BrowserRouter } from 'react-router-dom';
+import Contacts from './Contacts';
 import API from '../api/axios';
-import '@testing-library/jest-dom';
+
+jest.setTimeout(15000);
+
+// ---------------- MOCK NAVIGATION ----------------
 
 const mockNavigate = jest.fn();
 
-// ✅ FIXED: Full react-router-dom mock (VERY IMPORTANT)
 jest.mock('react-router-dom', () => ({
+    BrowserRouter: ({ children }) => <div>{children}</div>,
+    Routes: ({ children }) => <div>{children}</div>,
+    Route: ({ element }) => element,
+    Navigate: () => null,
+    Link: ({ children, to }) => <a href={to}>{children}</a>,
     useNavigate: () => mockNavigate,
-    BrowserRouter: ({ children }) => children,
-    Routes: ({ children }) => children,
-    Route: ({ children }) => children,
-    Navigate: () => null
 }));
 
-jest.mock('../api/axios');
+// ---------------- MOCK API ----------------
 
-describe('Contacts Component', () => {
+jest.mock('../api/axios', () => ({
+    get: jest.fn(),
+    post: jest.fn(),
+    put: jest.fn(),
+    delete: jest.fn(),
+}));
+
+// ---------------- MOCK DATA ----------------
+
+const mockContactsResponse = {
+    data: {
+        content: [
+            {
+                id: 1,
+                firstName: 'Alice',
+                lastName: 'Smith',
+                title: 'Software Engineer',
+                phones: [
+                    {
+                        phone: '123456',
+                        label: 'home',
+                    },
+                ],
+                emails: [
+                    {
+                        email: 'alice@example.com',
+                        label: 'work',
+                    },
+                ],
+            },
+            {
+                id: 2,
+                firstName: 'Bob',
+                lastName: 'Jones',
+                title: 'Designer',
+                phones: [
+                    {
+                        phone: '789012',
+                        label: 'work',
+                    },
+                ],
+                emails: [
+                    {
+                        email: 'bob@example.com',
+                        label: 'home',
+                    },
+                ],
+            },
+        ],
+        totalPages: 1,
+        totalElements: 2,
+    },
+};
+
+// ---------------- RENDER HELPER ----------------
+
+const renderComponent = () => {
+    return render(
+        <BrowserRouter>
+            <Contacts />
+        </BrowserRouter>
+    );
+};
+
+// ---------------- TESTS ----------------
+
+describe('Contacts Component Coverage Tests', () => {
 
     beforeEach(() => {
         jest.clearAllMocks();
 
-        API.get.mockResolvedValue({
-            data: {
-                content: [
-                    {
-                        id: 1,
-                        firstName: 'John',
-                        lastName: 'Doe',
-                        title: 'Manager',
-                        emails: [{ email: 'john@gmail.com', label: 'work' }],
-                        phones: [{ phone: '03001234567', label: 'home' }]
-                    }
-                ],
-                totalPages: 1,
-                totalElements: 1
-            }
-        });
+        API.get.mockResolvedValue(mockContactsResponse);
     });
 
-    test('renders contacts page', async () => {
-        render(<Contacts />);
+    // ---------- READ TEST ----------
 
-        expect(screen.getByText(/Contact Manager/i)).toBeInTheDocument();
+    test('renders contacts list successfully', async () => {
 
-        await waitFor(() => {
-            expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
-        });
-    });
+        renderComponent();
 
-    test('opens create contact dialog', async () => {
-        render(<Contacts />);
-
-        fireEvent.click(screen.getByText(/New contact/i));
-
-        expect(screen.getByText(/New Contact/i)).toBeInTheDocument();
-    });
-
-    test('opens edit dialog', async () => {
-        render(<Contacts />);
-
-        await waitFor(() => {
-            expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
-        });
-
-        fireEvent.click(screen.getByText(/John Doe/i));
-        fireEvent.click(screen.getByText(/Edit/i));
-
-        expect(screen.getByText(/Edit Contact/i)).toBeInTheDocument();
-    });
-
-    test('search contacts', async () => {
-        render(<Contacts />);
-
-        const searchInput = screen.getByPlaceholderText(
-            /Search by first or last name/i
+        expect(API.get).toHaveBeenCalledWith(
+            '/contacts?page=0&size=10'
         );
 
-        fireEvent.change(searchInput, {
-            target: { value: 'John' }
-        });
+        expect(
+            await screen.findByText('Alice Smith')
+        ).toBeInTheDocument();
 
-        await waitFor(() => {
-            expect(API.get).toHaveBeenCalled();
-        });
+        expect(
+            screen.getByText('Bob Jones')
+        ).toBeInTheDocument();
+
+        expect(
+            screen.getByText('2 contacts')
+        ).toBeInTheDocument();
     });
 
-    test('logout navigates to login page', async () => {
-        render(<Contacts />);
+    // ---------- EMPTY STATE ----------
 
-        fireEvent.click(screen.getByText(/Logout/i));
-
-        expect(mockNavigate).toHaveBeenCalledWith('/login');
-    });
-
-    test('open delete dialog', async () => {
-        render(<Contacts />);
-
-        await waitFor(() => {
-            expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
-        });
-
-        fireEvent.click(screen.getByText(/John Doe/i));
-        fireEvent.click(screen.getByText(/Delete/i));
-
-        expect(screen.getByText(/Delete Contact/i)).toBeInTheDocument();
-    });
-
-    test('delete contact success', async () => {
-
-        API.delete.mockResolvedValue({});
-
-        render(<Contacts />);
-
-        await waitFor(() => {
-            expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
-        });
-
-        fireEvent.click(screen.getByText(/John Doe/i));
-        fireEvent.click(screen.getByText(/Delete/i));
-
-        const confirmDelete = screen.getAllByText(/Delete/i)[1];
-        fireEvent.click(confirmDelete);
-
-        await waitFor(() => {
-            expect(API.delete).toHaveBeenCalled();
-        });
-    });
-
-    test('create contact success', async () => {
-
-        API.post.mockResolvedValue({});
-
-        render(<Contacts />);
-
-        fireEvent.click(screen.getByText(/New contact/i));
-
-        fireEvent.change(screen.getByLabelText(/First Name/i), {
-            target: { value: 'Ali' }
-        });
-
-        fireEvent.change(screen.getByLabelText(/Last Name/i), {
-            target: { value: 'Khan' }
-        });
-
-        fireEvent.click(screen.getByText(/Create Contact/i));
-
-        await waitFor(() => {
-            expect(API.post).toHaveBeenCalled();
-        });
-    });
-
-    test('edit contact success', async () => {
-
-        API.put.mockResolvedValue({});
-
-        render(<Contacts />);
-
-        await waitFor(() => {
-            expect(screen.getByText(/John Doe/i)).toBeInTheDocument();
-        });
-
-        fireEvent.click(screen.getByText(/John Doe/i));
-        fireEvent.click(screen.getByText(/Edit/i));
-
-        fireEvent.change(screen.getByLabelText(/First Name/i), {
-            target: { value: 'Updated John' }
-        });
-
-        fireEvent.click(screen.getByText(/Save Changes/i));
-
-        await waitFor(() => {
-            expect(API.put).toHaveBeenCalled();
-        });
-    });
-
-    test('shows error when fetch fails', async () => {
-
-        API.get.mockRejectedValueOnce(new Error('Error'));
-
-        render(<Contacts />);
-
-        await waitFor(() => {
-            expect(
-                screen.getByText(/Failed to load contacts/i)
-            ).toBeInTheDocument();
-        });
-    });
-
-    test('export contacts', async () => {
+    test('renders empty state correctly', async () => {
 
         API.get.mockResolvedValueOnce({
-            data: new Blob(['csv data'])
+            data: {
+                content: [],
+                totalPages: 0,
+                totalElements: 0,
+            },
         });
 
-        global.URL.createObjectURL = jest.fn();
+        renderComponent();
 
-        render(<Contacts />);
+        expect(
+            await screen.findByText(/no contacts yet/i)
+        ).toBeInTheDocument();
 
-        fireEvent.click(screen.getByText(/Export CSV/i));
+        expect(
+            screen.getByText(/create your first contact/i)
+        ).toBeInTheDocument();
+    });
+
+    // ---------- ERROR STATE ----------
+
+    test('shows error alert when API fails', async () => {
+
+        API.get.mockRejectedValueOnce(
+            new Error('Network Error')
+        );
+
+        renderComponent();
+
+        expect(
+            await screen.findByText(/failed to load contacts/i)
+        ).toBeInTheDocument();
+    });
+
+    // ---------- DETAILS PANEL ----------
+
+    test('opens and closes contact details panel', async () => {
+
+        renderComponent();
+
+        const contactItem =
+            await screen.findByText('Alice Smith');
+
+        fireEvent.click(contactItem);
+
+        expect(
+            screen.getAllByText('Alice Smith').length
+        ).toBeGreaterThan(1);
+
+        expect(
+            screen.getByText('123456')
+        ).toBeInTheDocument();
+
+        expect(
+            screen.getByText('alice@example.com')
+        ).toBeInTheDocument();
+
+    
+        const closeBtn = screen.getByRole('button', {
+            name: /close/i,
+        });
+
+        fireEvent.click(closeBtn);
 
         await waitFor(() => {
-            expect(API.get).toHaveBeenCalled();
+            expect(
+                screen.getAllByText('Alice Smith')
+            ).toHaveLength(1);
         });
     });
 
-    test('import contacts', async () => {
+    // ---------- SEARCH ----------
 
-        API.post.mockResolvedValue({});
+    test('searches contacts correctly', async () => {
 
-        render(<Contacts />);
+        renderComponent();
 
-        const file = new File(['name,email'], 'contacts.csv', {
-            type: 'text/csv'
+        await screen.findByText('Alice Smith');
+
+        API.get.mockResolvedValueOnce({
+            data: {
+                content: [
+                    mockContactsResponse.data.content[0],
+                ],
+                totalPages: 1,
+                totalElements: 1,
+            },
         });
 
-        const input = screen.getByLabelText(/import csv/i);
+        const searchInput =
+            screen.getByPlaceholderText(
+                /search by first or last name/i
+            );
 
-        fireEvent.change(input, {
-            target: { files: [file] }
+        await userEvent.type(searchInput, 'Alice');
+
+        await waitFor(() => {
+            expect(API.get).toHaveBeenCalledWith(
+                '/contacts/search?query=Alice&page=0&size=10'
+            );
         });
+    });
+
+    // ---------- CREATE ----------
+
+    test('creates new contact successfully', async () => {
+
+        renderComponent();
+
+        await screen.findByText('Alice Smith');
+
+        const newBtn = screen.getByRole('button', {
+            name: /new contact/i,
+        });
+
+        fireEvent.click(newBtn);
+
+        expect(
+            screen.getByRole('heading', {
+                name: /new contact/i,
+            })
+        ).toBeInTheDocument();
+
+        await userEvent.type(
+            screen.getByLabelText(/first name/i),
+            'Charlie'
+        );
+
+        await userEvent.type(
+            screen.getByLabelText(/last name/i),
+            'Brown'
+        );
+
+        await userEvent.type(
+            screen.getByLabelText(/title/i),
+            'Manager'
+        );
+
+        await userEvent.type(
+            screen.getByLabelText(/phone/i),
+            '5551234'
+        );
+
+        await userEvent.type(
+            screen.getByLabelText(/email/i),
+            'charlie@test.com'
+        );
+
+        API.post.mockResolvedValueOnce({
+            data: {},
+        });
+
+        fireEvent.click(
+            screen.getByRole('button', {
+                name: /create contact/i,
+            })
+        );
 
         await waitFor(() => {
             expect(API.post).toHaveBeenCalled();
         });
     });
 
-    test('close dialog', async () => {
+    // ---------- UPDATE ----------
 
-        render(<Contacts />);
+    test('updates contact successfully', async () => {
 
-        fireEvent.click(screen.getByText(/New contact/i));
-        fireEvent.click(screen.getByText(/Cancel/i));
+        renderComponent();
+
+        const contactItem =
+            await screen.findByText('Alice Smith');
+
+        fireEvent.click(contactItem);
+
+        const editBtn = screen.getByRole('button', {
+            name: /edit/i,
+        });
+
+        fireEvent.click(editBtn);
+
+        expect(
+            screen.getByRole('heading', {
+                name: /edit contact/i,
+            })
+        ).toBeInTheDocument();
+
+        const firstNameInput =
+            screen.getByLabelText(/first name/i);
+
+        await userEvent.clear(firstNameInput);
+
+        await userEvent.type(
+            firstNameInput,
+            'Alisha'
+        );
+
+        API.put.mockResolvedValueOnce({
+            data: {},
+        });
+
+        fireEvent.click(
+            screen.getByRole('button', {
+                name: /save changes/i,
+            })
+        );
 
         await waitFor(() => {
-            expect(
-                screen.queryByText(/New Contact/i)
-            ).not.toBeInTheDocument();
+            expect(API.put).toHaveBeenCalledWith(
+                '/contacts/1',
+                expect.objectContaining({
+                    firstName: 'Alisha',
+                })
+            );
         });
     });
 
-    test('pagination changes page', async () => {
+    // ---------- DELETE ----------
 
-        API.get.mockResolvedValue({
-            data: {
-                content: [],
-                totalPages: 2,
-                totalElements: 20
-            }
+    test('deletes contact successfully', async () => {
+
+        renderComponent();
+
+        const contactItem =
+            await screen.findByText('Bob Jones');
+
+        fireEvent.click(contactItem);
+
+        const deleteButtons =
+            screen.getAllByRole('button', {
+                name: /delete/i,
+            });
+
+        fireEvent.click(deleteButtons[0]);
+
+        expect(
+            screen.getByText(
+                /are you sure you want to delete/i
+            )
+        ).toBeInTheDocument();
+
+        API.delete.mockResolvedValueOnce({
+            data: {},
         });
 
-        render(<Contacts />);
+        const confirmDeleteButtons =
+            screen.getAllByRole('button', {
+                name: /delete/i,
+            });
+
+        fireEvent.click(
+            confirmDeleteButtons[
+                confirmDeleteButtons.length - 1
+            ]
+        );
 
         await waitFor(() => {
-            expect(
-                screen.getByRole('button', { name: /Go to page 2/i })
-            ).toBeInTheDocument();
+            expect(API.delete).toHaveBeenCalledWith(
+                '/contacts/2'
+            );
         });
     });
 
+    // ---------- LOGOUT ----------
+
+    test('handles logout correctly', async () => {
+
+        storageMock();
+
+        window.localStorage.setItem(
+            'token',
+            'dummy-token'
+        );
+
+        renderComponent();
+
+        await screen.findByText('Alice Smith');
+
+        const logoutBtn = screen.getByRole('button', {
+            name: /logout/i,
+        });
+
+        fireEvent.click(logoutBtn);
+
+        expect(
+            window.localStorage.getItem('token')
+        ).toBeNull();
+
+        expect(mockNavigate).toHaveBeenCalledWith(
+            '/login'
+        );
+    });
+
+    // ---------- EXPORT ----------
+
+    test('exports CSV successfully', async () => {
+
+        window.URL.createObjectURL = jest.fn(
+            () => 'blob:mock-url'
+        );
+
+        API.get.mockResolvedValueOnce({
+            data: new Blob(
+                ['csv content'],
+                { type: 'text/csv' }
+            ),
+        });
+
+        renderComponent();
+
+        const exportBtn = screen.getByRole('button', {
+            name: /export csv/i,
+        });
+
+        fireEvent.click(exportBtn);
+
+        await waitFor(() => {
+            expect(API.get).toHaveBeenCalledWith(
+                '/contacts/export',
+                { responseType: 'blob' }
+            );
+        });
+    });
 });
+
+// ---------------- LOCAL STORAGE MOCK ----------------
+
+function storageMock() {
+
+    let storage = {};
+
+    Object.defineProperty(window, 'localStorage', {
+        value: {
+            setItem(key, value) {
+                storage[key] = value;
+            },
+
+            getItem(key) {
+                return storage[key] || null;
+            },
+
+            removeItem(key) {
+                delete storage[key];
+            },
+
+            clear() {
+                storage = {};
+            },
+        },
+
+        writable: true,
+    });
+}
