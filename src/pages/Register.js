@@ -111,7 +111,11 @@ function Register() {
                             InputProps={{
                                 endAdornment: (
                                     <InputAdornment position="end">
-                                        <IconButton size="small" onClick={() => setShowPassword(!showPassword)}>
+                                        <IconButton
+                                            size="small"
+                                            data-testid="VisibilityIcon"
+                                            onClick={() => setShowPassword(!showPassword)}
+                                        >
                                             {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
                                         </IconButton>
                                     </InputAdornment>
@@ -147,7 +151,7 @@ function Register() {
                     <Typography textAlign="center" variant="body2" color="text.secondary">
                         Already have an account?{' '}
                         <Link to="/login" style={{ color: '#1a1a2e', fontWeight: 'bold', textDecoration: 'none' }}>
-                            Sign in
+                            Sign in here
                         </Link>
                     </Typography>
                 </CardContent>

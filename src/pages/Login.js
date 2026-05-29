@@ -110,6 +110,7 @@ function Login() {
                                     <InputAdornment position="end">
                                         <IconButton
                                             size="small"
+                                            aria-label="visibility"
                                             onClick={() => setShowPassword(!showPassword)}
                                         >
                                             {showPassword ? <VisibilityOff fontSize="small" /> : <Visibility fontSize="small" />}
@@ -147,7 +148,7 @@ function Login() {
 
                     <Divider sx={{ my: 2 }} />
 
-                    <Typography textAlign="center" variant="body2" color="text.secondary">
+                    <Typography variant="body2" color="text.secondary"sx={{ textAlign: 'center' }}>
                         No account?{' '}
                         <Link to="/register" style={{ color: '#1a1a2e', fontWeight: 'bold', textDecoration: 'none' }}>
                             Register
