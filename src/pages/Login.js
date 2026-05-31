@@ -16,19 +16,28 @@ function Login() {
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
-        e.preventDefault();
-        setError('');
-        setLoading(true);
-        try {
-            const response = await API.post('/auth/login', { identifier, password });
-            localStorage.setItem('token', response.data);
-            navigate('/contacts');
-        } catch (err) {
+    e.preventDefault();
+    setError('');
+    setLoading(true);
+    try {
+        const response = await API.post('/auth/login', { identifier, password });
+        const token = response.data;
+
+        // Check if response is a valid JWT token
+        if (!token || token === 'invalid credentials' || !token.includes('.')) {
             setError('Invalid credentials. Please try again.');
-        } finally {
             setLoading(false);
+            return;
         }
-    };
+
+        localStorage.setItem('token', token);
+        navigate('/contacts');
+    } catch (err) {
+        setError('Invalid credentials. Please try again.');
+    } finally {
+        setLoading(false);
+    }
+};
 
     return (
         <Box sx={{

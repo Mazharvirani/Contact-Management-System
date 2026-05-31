@@ -5,7 +5,7 @@ import {
     Dialog, DialogTitle, DialogContent, DialogActions,
     CircularProgress, Alert, Pagination, AppBar, Toolbar,
     Avatar, IconButton, Chip, Divider, List, ListItem,
-    ListItemAvatar, ListItemText
+    ListItemAvatar, ListItemText, Drawer
 } from '@mui/material';
 import {
     Search, Add, Edit, Delete, Phone, Email,
@@ -319,135 +319,194 @@ function Contacts() {
                         </Box>
                     )}
                 </Box>
+                <Drawer
+    anchor="right"
+    open={Boolean(selected)}
+    onClose={() => setSelected(null)}
+>
+    <Box sx={{ width: 500, height: '100vh', overflow: 'auto', backgroundColor: '#f8f9fa' }}>
 
-                {/* RIGHT PANEL — Contact Detail */}
-                {selected && (
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                        <Box sx={{
-                            backgroundColor: 'white', borderRadius: 3,
-                            border: '1px solid #e9ecef', overflow: 'hidden'
-                        }}>
-                            {/* Contact Header */}
-                            <Box sx={{
-                                background: `linear-gradient(135deg, ${getColor(selected.firstName)} 0%, #2d2d44 100%)`,
-                                padding: '40px 30px',
-                                color: 'white',
-                                position: 'relative'
+        {/* Main Container */}
+        <Box sx={{
+            backgroundColor: 'white',
+            minHeight: '100%',
+            borderLeft: '1px solid #e9ecef'
+        }}>
+
+            {/* Contact Header */}
+            <Box sx={{
+                background: `linear-gradient(135deg, ${selected ? getColor(selected.firstName) : '#1a1a2e'} 0%, #2d2d44 100%)`,
+                padding: '40px 30px',
+                color: 'white',
+                position: 'relative'
+            }}>
+
+                <IconButton
+                    aria-label="close"
+                    onClick={() => setSelected(null)}
+                    sx={{
+                        position: 'absolute',
+                        top: 12,
+                        right: 12,
+                        color: 'rgba(255,255,255,0.7)'
+                    }}
+                >
+                    <Close />
+                </IconButton>
+
+                <Avatar sx={{
+                    width: 80,
+                    height: 80,
+                    fontSize: 32,
+                    fontWeight: 'bold',
+                    backgroundColor: 'rgba(255,255,255,0.2)',
+                    border: '3px solid rgba(255,255,255,0.4)',
+                    mb: 2
+                }}>
+                    {selected && getInitials(selected.firstName, selected.lastName)}
+                </Avatar>
+
+                <Typography variant="h5" fontWeight="bold">
+                    {selected?.firstName} {selected?.lastName}
+                </Typography>
+
+                {selected?.title && (
+                    <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
+                        {selected.title}
+                    </Typography>
+                )}
+
+                {/* Action Buttons */}
+                <Box sx={{ display: 'flex', gap: 1, mt: 2.5 }}>
+                    <Button
+                        variant="contained"
+                        startIcon={<Edit />}
+                        onClick={() => handleOpenEdit(selected)}
+                        size="small"
+                        sx={{
+                            backgroundColor: 'rgba(255,255,255,0.2)',
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            backdropFilter: 'blur(10px)',
+                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' }
+                        }}
+                    >
+                        Edit
+                    </Button>
+
+                    <Button
+                        variant="contained"
+                        startIcon={<Delete />}
+                        onClick={() => {
+                            setDeleteId(selected.id);
+                            setDeleteDialog(true);
+                        }}
+                        size="small"
+                        sx={{
+                            backgroundColor: 'rgba(220,53,69,0.7)',
+                            textTransform: 'none',
+                            borderRadius: 2,
+                            '&:hover': { backgroundColor: 'rgba(220,53,69,0.9)' }
+                        }}
+                    >
+                        Delete
+                    </Button>
+                </Box>
+            </Box>
+
+            {/* Contact Details */}
+            <Box sx={{ padding: '24px 30px' }}>
+
+                {/* Phones */}
+                {selected?.phones?.length > 0 && (
+                    <Box sx={{ mb: 3 }}>
+                        <Typography variant="caption" fontWeight="bold" color="#888"
+                            sx={{ letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
+                            Phone Numbers
+                        </Typography>
+
+                        {selected.phones.map((p, i) => (
+                            <Box key={i} sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                py: 1.5,
+                                borderBottom: i < selected.phones.length - 1
+                                    ? '1px solid #f0f0f0'
+                                    : 'none'
                             }}>
-                                <IconButton aria-label="close"
-                                onClick={() => setSelected(null)}
-                                    sx={{ position: 'absolute', top: 12, right: 12, color: 'rgba(255,255,255,0.7)' }}>
-                                    <Close />
-                                </IconButton>
-                                <Avatar sx={{
-                                    width: 80, height: 80, fontSize: 32, fontWeight: 'bold',
-                                    backgroundColor: 'rgba(255,255,255,0.2)',
-                                    border: '3px solid rgba(255,255,255,0.4)',
-                                    mb: 2
-                                }}>
-                                    {getInitials(selected.firstName, selected.lastName)}
-                                </Avatar>
-                                <Typography variant="h5" fontWeight="bold">
-                                    {selected.firstName} {selected.lastName}
-                                </Typography>
-                                {selected.title && (
-                                    <Typography variant="body2" sx={{ opacity: 0.8, mt: 0.5 }}>
-                                        {selected.title}
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                    <Box sx={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: '50%',
+                                        backgroundColor: '#f0f4ff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <Phone sx={{ fontSize: 18, color: '#1a1a2e' }} />
+                                    </Box>
+
+                                    <Typography fontWeight="500">
+                                        {p.phone}
                                     </Typography>
-                                )}
-
-                                {/* Action Buttons */}
-                                <Box sx={{ display: 'flex', gap: 1, mt: 2.5 }}>
-                                    <Button variant="contained" startIcon={<Edit />}
-                                        onClick={() => handleOpenEdit(selected)}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: 'rgba(255,255,255,0.2)',
-                                            textTransform: 'none', borderRadius: 2,
-                                            backdropFilter: 'blur(10px)',
-                                            '&:hover': { backgroundColor: 'rgba(255,255,255,0.3)' }
-                                        }}>
-                                        Edit
-                                    </Button>
-                                    <Button variant="contained" startIcon={<Delete />}
-                                        onClick={() => { setDeleteId(selected.id); setDeleteDialog(true); }}
-                                        size="small"
-                                        sx={{
-                                            backgroundColor: 'rgba(220,53,69,0.7)',
-                                            textTransform: 'none', borderRadius: 2,
-                                            '&:hover': { backgroundColor: 'rgba(220,53,69,0.9)' }
-                                        }}>
-                                        Delete
-                                    </Button>
                                 </Box>
+
+                                <Chip label={p.label} size="small"
+                                    sx={{ backgroundColor: '#f0f4ff', color: '#1a1a2e' }} />
                             </Box>
-
-                            {/* Contact Details */}
-                            <Box sx={{ padding: '24px 30px' }}>
-
-                                {/* Phone Numbers */}
-                                {selected.phones?.length > 0 && (
-                                    <Box sx={{ mb: 3 }}>
-                                        <Typography variant="caption" fontWeight="bold" color="#888"
-                                            sx={{ letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
-                                            Phone Numbers
-                                        </Typography>
-                                        {selected.phones.map((p, i) => (
-                                            <Box key={i} sx={{
-                                                display: 'flex', alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                py: 1.5, borderBottom: i < selected.phones.length - 1 ? '1px solid #f0f0f0' : 'none'
-                                            }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                    <Box sx={{
-                                                        width: 36, height: 36, borderRadius: '50%',
-                                                        backgroundColor: '#f0f4ff',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                    }}>
-                                                        <Phone sx={{ fontSize: 18, color: '#1a1a2e' }} />
-                                                    </Box>
-                                                    <Typography fontWeight="500">{p.phone}</Typography>
-                                                </Box>
-                                                <Chip label={p.label} size="small"
-                                                    sx={{ backgroundColor: '#f0f4ff', color: '#1a1a2e', fontWeight: '500' }} />
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                )}
-
-                                {/* Email Addresses */}
-                                {selected.emails?.length > 0 && (
-                                    <Box>
-                                        <Typography variant="caption" fontWeight="bold" color="#888"
-                                            sx={{ letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
-                                            Email Addresses
-                                        </Typography>
-                                        {selected.emails.map((e, i) => (
-                                            <Box key={i} sx={{
-                                                display: 'flex', alignItems: 'center',
-                                                justifyContent: 'space-between',
-                                                py: 1.5, borderBottom: i < selected.emails.length - 1 ? '1px solid #f0f0f0' : 'none'
-                                            }}>
-                                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
-                                                    <Box sx={{
-                                                        width: 36, height: 36, borderRadius: '50%',
-                                                        backgroundColor: '#f0f4ff',
-                                                        display: 'flex', alignItems: 'center', justifyContent: 'center'
-                                                    }}>
-                                                        <Email sx={{ fontSize: 18, color: '#1a1a2e' }} />
-                                                    </Box>
-                                                    <Typography fontWeight="500">{e.email}</Typography>
-                                                </Box>
-                                                <Chip label={e.label} size="small"
-                                                    sx={{ backgroundColor: '#f0f4ff', color: '#1a1a2e', fontWeight: '500' }} />
-                                            </Box>
-                                        ))}
-                                    </Box>
-                                )}
-                            </Box>
-                        </Box>
+                        ))}
                     </Box>
                 )}
+
+                {/* Emails */}
+                {selected?.emails?.length > 0 && (
+                    <Box>
+                        <Typography variant="caption" fontWeight="bold" color="#888"
+                            sx={{ letterSpacing: 1, textTransform: 'uppercase', display: 'block', mb: 1.5 }}>
+                            Email Addresses
+                        </Typography>
+
+                        {selected.emails.map((e, i) => (
+                            <Box key={i} sx={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                py: 1.5,
+                                borderBottom: i < selected.emails.length - 1
+                                    ? '1px solid #f0f0f0'
+                                    : 'none'
+                            }}>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+                                    <Box sx={{
+                                        width: 36,
+                                        height: 36,
+                                        borderRadius: '50%',
+                                        backgroundColor: '#f0f4ff',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <Email sx={{ fontSize: 18, color: '#1a1a2e' }} />
+                                    </Box>
+
+                                    <Typography fontWeight="500">
+                                        {e.email}
+                                    </Typography>
+                                </Box>
+
+                                <Chip label={e.label} size="small"
+                                    sx={{ backgroundColor: '#f0f4ff', color: '#1a1a2e' }} />
+                            </Box>
+                        ))}
+                    </Box>
+                )}
+
+            </Box>
+        </Box>
+    </Box>
+</Drawer>
             </Box>
 
             {/* Create/Edit Dialog */}
